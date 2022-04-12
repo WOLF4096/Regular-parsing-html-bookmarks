@@ -1,6 +1,7 @@
 <?php
 $out = $_POST["out"];
-if ($out <> "csv"){
+$flo = $_FILES["file"]["name"];
+if ($out == "html" or $flo == ""){
 $te1 = microtime(true);
 ?>
 <!-- 狼介（WOLF4096）    Email: wolf4096@foxmail.com    QQ: 2275203821
@@ -33,13 +34,14 @@ https://github.com/WOLF4096    All Platform ID: WOLF4096
     </head>
     <body>
         <div class="div_bj">
-            <div style="height: 50px;width: 860px;">
+            <div style="height: 80px;">
                 <form method="post" enctype="multipart/form-data" style="font-size: 14px;">
                     <b>使用正则解析 HTML 书签</b>&nbsp;&nbsp;
-                    <input type="file" name="file" id="file" /> 
-                    <input type="radio" name="out" value="htm" checked>显示 HTML&nbsp;&nbsp;
-                    <input type="radio" name="out" value="csv">输出 CSV&nbsp;&nbsp;
-                    <input type="submit" name="submit" value="提交" /><br/><?php if($_FILES["file"]["name"] <> ""){echo "文件名：".$_FILES["file"]["name"];};?>
+                    <input type="file" name="file" id="file" /><br/>
+                    <input type="radio" name="out" value="html" checked>显示 HTML&nbsp;&nbsp;
+                    <input type="radio" name="out" value="csv0">输出 CSV_VScode浏览&nbsp;&nbsp;
+                    <input type="radio" name="out" value="csv1">输出 CSV_Excel 浏览&nbsp;&nbsp;
+                    <input type="submit" name="submit" value="提交" /><br/><?php if($flo <> ""){echo "文件名：".$flo."\n";};?>
                 </form>
             </div>
 <?php
@@ -54,10 +56,7 @@ if (($_FILES["file"]["type"] == "text/html") && ($_FILES["file"]["size"] < 10240
         $filetime = "tmp_html/".time();//临时文件名
 		move_uploaded_file($_FILES["file"]["tmp_name"],$filetime);
         $file = fopen($filetime, "r") or exit("无法打开文件!");
-        if ($out == "csv"){
-            $filn = $_FILES["file"]["name"].'.csv';
-            $top = "序号,分类,标题,链接,创建时间,图标\n";
-        }else{
+        if ($out == "html" or $out == ""){
             echo '
             <div>
                 <div class="urltab u0">序号</div>
@@ -67,6 +66,9 @@ if (($_FILES["file"]["type"] == "text/html") && ($_FILES["file"]["size"] < 10240
                 <div class="urltab u2">创建时间</div>
                 <div class="urltab u4">图标</div>
             </div>';
+        }else{
+            $filn = $flo.'.csv';
+            $top = "序号,分类,标题,链接,创建时间,图标\n";
         }
         while(!feof($file)){
             $str = fgets($file);
@@ -85,9 +87,7 @@ if (($_FILES["file"]["type"] == "text/html") && ($_FILES["file"]["size"] < 10240
                 $fen = $tit;
             }else if ($tit <> "" and $url <> ""){
                 $inn ++;
-                if ($out == "csv"){
-                    $top .= "$inn,$fen,$tit,$url,$tim,$icn\n";
-                }else{
+                if ($out == "html" or $out == ""){
                     echo'
             <div>
                 <div class="urltab u0">'.$inn.'</div>
@@ -97,6 +97,8 @@ if (($_FILES["file"]["type"] == "text/html") && ($_FILES["file"]["size"] < 10240
                 <div class="urltab u2">'.$tim.'</div>
                 <div class="urltab u4">'.$icn.'</div>
             </div>';
+                }else{
+                    $top .= "$inn,$fen,$tit,$url,$tim,$icn\n";
                 }
             }
         }
@@ -104,11 +106,14 @@ if (($_FILES["file"]["type"] == "text/html") && ($_FILES["file"]["size"] < 10240
         unlink($filetime);//处理完后删除临时文件
 	}
 }
-if ($out == "csv"){
+if ($out == "csv0" and $flo <> ""){
+    header("Content-type:text/csv");
+    header("Content-Disposition:attachment;filename=".$filn);
+    echo mb_convert_encoding($top, "UTF-8");//适合记事本、VScode
+}elseif ($out == "csv1" and $flo <> ""){
     header("Content-type:text/csv");
     header("Content-Disposition:attachment;filename=".$filn);
     echo mb_convert_encoding($top, "CP936");//适合Excel
-    // echo mb_convert_encoding($top, "UTF-8");//适合记事本、VScode
 }else{
     echo '
         </div>
